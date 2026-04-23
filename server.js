@@ -1,8 +1,10 @@
 import express from 'express';
+import connectDB from './config/db.js';
 
 const app = express();
 const port = 3000;
 
+await connectDB();
 app.get('/',(req,res)=>
 {
    console.log("Restaurant API");
