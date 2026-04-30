@@ -1,0 +1,652 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Restaurant API",
+    "description": "Complete test suite for the Restaurant API. Covers Menu Items, Customers, and Orders — including CRUD, filtering, sorting, pagination, search, error cases, and relationship queries.\n\n**Setup:** Set the `base_url` collection variable to `http://localhost:3000` before running.\n\n**Recommended run order:**\n1. Create a Customer\n2. Create a Menu Item\n3. Copy the returned `_id` values into the `customerId` and `menuItemId` collection variables\n4. Create an Order using those IDs\n5. Copy the returned order `_id` into `orderId`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000", "type": "string" },
+    { "key": "menuItemId", "value": "", "type": "string", "description": "Paste a real MenuItem _id here after creating one" },
+    { "key": "customerId", "value": "", "type": "string", "description": "Paste a real Customer _id here after creating one" },
+    { "key": "orderId", "value": "", "type": "string", "description": "Paste a real Order _id here after creating one" }
+  ],
+  "item": [
+    {
+      "name": "Menu Items",
+      "description": "All endpoints for the MenuItem collection. Tests CRUD, filtering by category, name search ($regex), sorting, pagination, availability filter, and error cases.",
+      "item": [
+        {
+          "name": "Get All Menu Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/menuItems",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems"]
+            },
+            "description": "Returns all menu items with default pagination (page 1, limit 10). Response includes `total`, `page`, `limit`, and `menuItems` array."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Menu Items - Filter by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/menuItems?category=Main Course",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems"],
+              "query": [
+                { "key": "category", "value": "Main Course", "description": "Valid values: Appetizer, Main Course, Dessert, Beverage, Side Dish" }
+              ]
+            },
+            "description": "Filters menu items to only return items in the 'Main Course' category."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Menu Items - Search by Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/menuItems?name=pizza",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems"],
+              "query": [
+                { "key": "name", "value": "pizza", "description": "Case-insensitive $regex search on the name field" }
+              ]
+            },
+            "description": "Uses MongoDB $regex to search for menu items whose name contains 'pizza' (case-insensitive)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Menu Items - Sort by Price",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/menuItems?sort=price",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems"],
+              "query": [
+                { "key": "sort", "value": "price", "description": "Field to sort by ascending" }
+              ]
+            },
+            "description": "Returns all menu items sorted by price ascending."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Menu Items - Paginated",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/menuItems?page=1&limit=3",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "3", "description": "Only return 3 items per page" }
+              ]
+            },
+            "description": "Demonstrates pagination. Change page to 2 to get the next set of results."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Menu Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/menuItems/available",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems", "available"]
+            },
+            "description": "Returns only menu items where `available: true`, sorted by name."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Menu Item by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/menuItems/{{menuItemId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems", "{{menuItemId}}"]
+            },
+            "description": "Returns a single menu item by its MongoDB ObjectId. Returns 404 if not found."
+          },
+          "response": []
+        },
+        {
+          "name": "Create New Menu Item",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Margherita Pizza\",\n  \"description\": \"Classic tomato sauce with fresh mozzarella and basil on a hand-tossed crust\",\n  \"price\": 12.99,\n  \"category\": \"Main Course\",\n  \"available\": true,\n  \"ingredients\": [\"tomato sauce\", \"mozzarella\", \"fresh basil\", \"olive oil\"],\n  \"calories\": 800,\n  \"preparationTime\": 15\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/menuItems",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems"]
+            },
+            "description": "Creates a new menu item. Copy the `_id` from the response and paste it into the `menuItemId` collection variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Menu Item (Full)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Margherita Pizza\",\n  \"description\": \"Updated: Classic tomato sauce with buffalo mozzarella\",\n  \"price\": 13.99,\n  \"category\": \"Main Course\",\n  \"available\": true,\n  \"ingredients\": [\"tomato sauce\", \"buffalo mozzarella\", \"fresh basil\"],\n  \"calories\": 820,\n  \"preparationTime\": 15\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/menuItems/{{menuItemId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems", "{{menuItemId}}"]
+            },
+            "description": "Full replacement update of a menu item. All required fields must be included."
+          },
+          "response": []
+        },
+        {
+          "name": "Partial Update Menu Item (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"available\": false,\n  \"price\": 11.99\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/menuItems/{{menuItemId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems", "{{menuItemId}}"]
+            },
+            "description": "Partial update — only the fields provided are changed. Here we mark the item unavailable and update its price."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Menu Item",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/menuItems/{{menuItemId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems", "{{menuItemId}}"]
+            },
+            "description": "Deletes the menu item with the given ID. Returns 404 if not found."
+          },
+          "response": []
+        },
+        {
+          "name": "[Error] Get Menu Item - Invalid ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/menuItems/invalidid123",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems", "invalidid123"]
+            },
+            "description": "Expects a 500 error because 'invalidid123' is not a valid MongoDB ObjectId format."
+          },
+          "response": []
+        },
+        {
+          "name": "[Error] Create Menu Item - Missing Required Field",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"No name provided\",\n  \"price\": 9.99,\n  \"category\": \"Dessert\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/menuItems",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems"]
+            },
+            "description": "Expects a 400 validation error because the required `name` field is missing."
+          },
+          "response": []
+        },
+        {
+          "name": "[Error] Create Menu Item - Invalid Category",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mystery Dish\",\n  \"description\": \"You will not know what this is\",\n  \"price\": 5.00,\n  \"category\": \"Unknown\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/menuItems",
+              "host": ["{{base_url}}"],
+              "path": ["api", "menuItems"]
+            },
+            "description": "Expects a 400 validation error because 'Unknown' is not in the allowed enum values for category."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "description": "All endpoints for the Customer collection. Tests CRUD, name search ($regex), sorting, pagination, and error cases.",
+      "item": [
+        {
+          "name": "Get All Customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/customers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers"]
+            },
+            "description": "Returns all customers sorted by most recently created (default)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Customers - Search by Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/customers?name=john",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers"],
+              "query": [
+                { "key": "name", "value": "john", "description": "Case-insensitive $regex search on the name field" }
+              ]
+            },
+            "description": "Searches for customers whose name contains 'john' using MongoDB $regex (case-insensitive)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Customers - Sort by Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/customers?sort=name",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers"],
+              "query": [
+                { "key": "sort", "value": "name" }
+              ]
+            },
+            "description": "Returns all customers sorted alphabetically by name."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Customers - Paginated",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/customers?page=1&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "description": "Returns the first page of customers, 5 per page."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/customers/{{customerId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers", "{{customerId}}"]
+            },
+            "description": "Returns a single customer by their MongoDB ObjectId. Returns 404 if not found."
+          },
+          "response": []
+        },
+        {
+          "name": "Create New Customer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"phone\": \"555-867-5309\",\n  \"address\": \"42 Elm Street, Springfield\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/customers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers"]
+            },
+            "description": "Creates a new customer. Copy the `_id` from the response into the `customerId` collection variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Customer (Full)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane.smith@example.com\",\n  \"phone\": \"555-999-1234\",\n  \"address\": \"100 Oak Avenue, Springfield\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/customers/{{customerId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers", "{{customerId}}"]
+            },
+            "description": "Full replacement update of a customer record. All fields should be provided."
+          },
+          "response": []
+        },
+        {
+          "name": "Partial Update Customer (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"555-000-9999\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/customers/{{customerId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers", "{{customerId}}"]
+            },
+            "description": "Partial update — only updates the phone number, leaving all other fields unchanged."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Customer",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/customers/{{customerId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers", "{{customerId}}"]
+            },
+            "description": "Deletes the customer with the given ID. Returns 404 if the customer does not exist."
+          },
+          "response": []
+        },
+        {
+          "name": "[Error] Get Customer - Invalid ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/customers/invalidid123",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers", "invalidid123"]
+            },
+            "description": "Expects a 500 error because 'invalidid123' is not a valid MongoDB ObjectId."
+          },
+          "response": []
+        },
+        {
+          "name": "[Error] Create Customer - Missing Required Email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"No Email Person\",\n  \"phone\": \"555-0000\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/customers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "customers"]
+            },
+            "description": "Expects a 400 validation error because the required `email` field is missing."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "description": "All endpoints for the Order collection. Tests CRUD, filtering by status, pagination, populate (relationship queries), and error cases. At least 3 requests demonstrate Order→Customer and Order→MenuItem relationships.",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders"]
+            },
+            "description": "Returns all orders with nested Customer name/email and MenuItem name/price populated."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Orders - Filter by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders?status=Pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders"],
+              "query": [
+                { "key": "status", "value": "Pending", "description": "Valid values: Pending, Preparing, Ready, Completed, Cancelled" }
+              ]
+            },
+            "description": "Returns only orders with status 'Pending'."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Orders - Paginated",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders?page=1&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "description": "Returns the first 5 orders. Demonstrates pagination on the orders collection."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Most Popular Menu Item",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders/popular",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", "popular"]
+            },
+            "description": "[Relationship] Traverses all orders and counts MenuItem occurrences to find the most frequently ordered item. Returns `{ item: name, count: number }`."
+          },
+          "response": []
+        },
+        {
+          "name": "[Relationship] Get Order by ID - Populated Customer & Menu Items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{orderId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", "{{orderId}}"]
+            },
+            "description": "[Relationship] Returns a single order with its Customer (name, email, phone) and each MenuItem (name, price, category) fully populated via ObjectId references — demonstrating the Order→Customer and Order→MenuItem relationships."
+          },
+          "response": []
+        },
+        {
+          "name": "[Relationship] Create New Order (links Customer + Menu Items)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer\": \"{{customerId}}\",\n  \"menuItem\": [\n    { \"item\": \"{{menuItemId}}\", \"quantity\": 2 }\n  ],\n  \"totalAmount\": 25.98,\n  \"status\": \"Pending\",\n  \"specialInstructions\": \"Extra sauce on the side please\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders"]
+            },
+            "description": "[Relationship] Creates an order that references a Customer ObjectId and a MenuItem ObjectId — demonstrating both relationships defined in the data model. Requires `customerId` and `menuItemId` collection variables to be set."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Order (Full)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer\": \"{{customerId}}\",\n  \"menuItem\": [\n    { \"item\": \"{{menuItemId}}\", \"quantity\": 3 }\n  ],\n  \"totalAmount\": 38.97,\n  \"status\": \"Preparing\",\n  \"specialInstructions\": \"Updated: no sauce\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{orderId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", "{{orderId}}"]
+            },
+            "description": "Full replacement update of an order. Updates quantity and advances status to 'Preparing'."
+          },
+          "response": []
+        },
+        {
+          "name": "Partial Update Order Status (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Ready\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{orderId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", "{{orderId}}"]
+            },
+            "description": "Partial update — advances the order status to 'Ready' without changing any other fields. Practical use case: kitchen marks order done."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders/{{orderId}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", "{{orderId}}"]
+            },
+            "description": "Deletes the order with the given ID. Returns 404 if not found."
+          },
+          "response": []
+        },
+        {
+          "name": "[Error] Get Order - Invalid ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders/invalidid123",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", "invalidid123"]
+            },
+            "description": "Expects a 500 error because 'invalidid123' is not a valid MongoDB ObjectId."
+          },
+          "response": []
+        },
+        {
+          "name": "[Error] Create Order - Missing Customer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"menuItem\": [\n    { \"item\": \"{{menuItemId}}\", \"quantity\": 1 }\n  ],\n  \"totalAmount\": 12.99,\n  \"status\": \"Pending\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders"]
+            },
+            "description": "Expects a 400 validation error because the required `customer` field is missing."
+          },
+          "response": []
+        },
+        {
+          "name": "[Error] Create Order - Invalid Status",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer\": \"{{customerId}}\",\n  \"menuItem\": [\n    { \"item\": \"{{menuItemId}}\", \"quantity\": 1 }\n  ],\n  \"totalAmount\": 12.99,\n  \"status\": \"Flying\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders"]
+            },
+            "description": "Expects a 400 validation error because 'Flying' is not in the allowed enum values for status."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
