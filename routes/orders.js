@@ -24,8 +24,8 @@ router.post('/',async (req,res) =>
 router.get('/',async (req,res) =>
 {
     try{
-        const order = await Order.find();
-        res.status(200).json(order);
+        const orders = await Order.find();
+        res.status(200).json(orders);
     }
     catch(err)
     {
@@ -37,21 +37,39 @@ router.get('/',async (req,res) =>
 router.get('/popular',async (req,res) =>
 {
     try{
-        const orders = await Order.find().populate("menuItem");
+        const orders = await Order.find().populate("menuItem.item");
         const count = {};
+        // count the max count of each item
+        let MaxCount = 0;
+        // store the most popular item
+        let popularItem ="";
 
-        // for(const order of orders)
-        // {
-        //     for(const item of order)
-        //     {
-        //     }
+        //loop through the orders and count the number of times each item is ordered
+        // and find the most popular item
+        orders.forEach(order => {
+            order.menuItem.forEach(menuItem => {
+                const itemId = menuItem.item._id.toString();
               
-        // }
-        res.status(201).json(orders);
+                if(count[itemId]) {
+                     count[itemId]++;
+                } else {
+                     count[itemId] = 1;
+                }
+
+                if(MaxCount < count[itemId]) {
+                    MaxCount = count[itemId];
+                    popularItem = menuItem.item.name;
+                }
+                 
+            });
+        });
+
+
+        res.status(200).json({"item":popularItem,"count":MaxCount});
     }
     catch(err)
     {
-        res.status(400).json({error:err.message});
+        res.status(500).json({error:err.message});
     }
 });
 
@@ -62,10 +80,10 @@ router.get('/:id',async (req,res) =>
         const order = await Order.findById(req.params.id);
         if(!order)
         {
-            res.status(400).json({"error":"Order not found"});
+           return res.status(400).json({"error":"Order not found"});
         }
          
-        res.status(201).json(order);
+        res.status(200).json(order);
     }
     catch(err)
     {
@@ -74,22 +92,40 @@ router.get('/:id',async (req,res) =>
 });
 
 // Update an order
-// router.get('/:id',async (req,res) =>
-// {
-//     try{
-//         const order = await Order.findById(req.params.id);
-//         if(!order)
-//         {
-//             res.status(400).json({"error":"Order not found"});
-//         }
+router.put('/:id',async (req,res) =>
+{
+    try{
+        const order = await Order.findByIdAndUpdate(req.params.id, req.body, {new:true,  runValidators: true});
+        if(!order)
+        {
+           return res.status(400).json({"error":"Order not found"});
+        }
          
-//         res.status(201).json(order);
-//     }
-//     catch(err)
-//     {
-//         res.status(500).json({error:err.message});
-//     }
-// });
+        res.status(200).json(order);
+    }
+    catch(err)
+    {
+         res.status(500).json({error:err.message});
+    }
+});
+
+// Delete an order
+router.delete('/:id',async (req,res) =>
+{
+    try{
+        const order = await Order.findByIdAndDelete(req.params.id);
+        if(!order)
+        {
+          return  res.status(400).json({"error":"Order not found"});
+        }
+
+        res.status(200).json(order);
+    }
+    catch(err)
+    {
+        res.status(500).json({error:err.message});
+    }
+});
 
   
 

@@ -4,19 +4,23 @@ const orderSchema = mongoose.Schema({
     // references the Customer collection
    customer:{
     type:mongoose.Schema.Types.ObjectId,
+    ref: 'Customer',
     required: [true,"order must be assigned to a customer"]
 
    },
    // references the MenuItem collection
    menuItem:
     [{ 
-        type:mongoose.Schema.Types.ObjectId,
-        quantity:Number
+       item:{ type:mongoose.Schema.Types.ObjectId,
+        ref: 'MenuItem',
+        required:[true] },
+        quantity:Number,
     }],
     
     totalAmount:{
         type:Number,
-        required: true
+        required: true,
+        min:0
     },
 
     status:
