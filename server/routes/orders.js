@@ -1,7 +1,11 @@
 import express from 'express';
+import { protect } from '../middleware/authMiddleware.js';
 import Order from '../models/order.js';
 
 const router = express.Router();
+
+// Require a valid JWT token for all order routes
+router.use(protect);
 
 // Get all orders — supports filtering by status/customer, sorting, pagination, and populates related docs
 router.get('/', async (req, res) => {
