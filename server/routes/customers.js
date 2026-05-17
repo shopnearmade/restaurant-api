@@ -6,17 +6,21 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const { name, sort, page = 1, limit = 10 } = req.query;
- 
+    const { name, email, sort, page = 1, limit = 10 } = req.query;
+
     const filter = {};
     if (name) filter.name = { $regex: name, $options: "i" };
- 
-    const customers = await Customer.find(filter)
-      .sort(sort ? { [sort]: 1 } : { createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
- 
-    res.json(customers);
+    if (email) filter.email = { $regex: email, $options: "i" };
+
+    const [customers, total] = await Promise.all([
+      Customer.find(filter)
+        .sort(sort ? { [sort]: 1 } : { createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit)),
+      Customer.countDocuments(filter),
+    ]);
+
+    res.json({ total, page: parseInt(page), limit: parseInt(limit), customers });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

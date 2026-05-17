@@ -1,7 +1,11 @@
 import express from 'express';
 import User from '../models/user.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+// All user management routes require a valid JWT
+router.use(protect);
 
 // Create a new user
 router.post("/",async(req,res)=>{

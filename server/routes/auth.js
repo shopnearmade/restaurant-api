@@ -4,37 +4,66 @@ import User from '../models/user.js';
 
 const router = express.Router();
 
-// POST /login
-router.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
+// POST /api/auth/register — create account and return a JWT
+router.post('/register', async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
 
-        // 1. Check if email and password are provided in the request
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Please provide an email and password' });
-        }
-
-        // 2. Check if user exists ( use +password) 
-        const user = await User.findOne({ email }).select('+password');
-        if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        // 3. Check if password matches using the method from models/user.js
-        const isMatch = await user.matchPassword(password);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        // 4. Create the JWT token
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'my_super_secret_key', {
-            expiresIn: '30d' // Token expires in 30 days
-        });
-
-        res.status(200).json({ success: true, token, user: { id: user._id, name: user.name, role: user.role } });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide name, email, and password' });
     }
+
+    // Reject duplicate emails before mongoose throws
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: 'An account with that email already exists' });
+    }
+
+    // Password is hashed by the pre-save hook in models/user.js
+    const user = await User.create({ name, email, password, role: role || 'staff' });
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'my_super_secret_key',
+      { expiresIn: '30d' }
+    );
+
+    res.status(201).json({ success: true, token, user: { id: user._id, name: user.name, role: user.role } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/auth/login — verify credentials and return a JWT
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide an email and password' });
+    }
+
+    // select('+password') overrides the schema's select:false on password
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || 'my_super_secret_key',
+      { expiresIn: '30d' }
+    );
+
+    res.status(200).json({ success: true, token, user: { id: user._id, name: user.name, role: user.role } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 export default router;

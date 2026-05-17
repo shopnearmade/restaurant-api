@@ -1,166 +1,132 @@
-# Restaurant API
+# Restaurant Management System
 
-A RESTful API for managing a restaurant's menu, customers, and orders — built with **Express.js**, **MongoDB**, and **Mongoose**.
+A full-stack restaurant management application built with **Express.js**, **MongoDB**, and **Next.js**.
 
 ---
 
 ## Project Overview
 
-This API provides a complete back-end for a restaurant management system. It supports creating and browsing menu items, registering customers, placing orders, and querying analytics like the most popular item ordered. All endpoints follow RESTful conventions, include input validation, and return meaningful HTTP status codes.
+This system provides a complete front-end and back-end for managing a restaurant's menu, customers, and orders. Staff can log in, browse and search menu items, manage customer records, and place and track orders — all through a responsive web interface that communicates with a REST API using the Fetch API and JWT authentication.
 
 ---
 
-## Collections / Models
+## Team Members & Primary Responsibilities
 
-| Model | Description |
-|---|---|
-| **MenuItem** | A dish or drink on the restaurant's menu (name, description, price, category, ingredients, availability, calories, prep time) |
-| **Customer** | A registered customer (name, email, phone, address) |
-| **Order** | A customer's order linking one Customer to one or more MenuItems, with a status workflow and total amount |
-
-### Relationships
-- An **Order** references a **Customer** via `ObjectId`
-- An **Order** references one or more **MenuItems** via an array of `ObjectId` references
+| Name | Role | Primary Contributions |
+|---|---|---|
+| Kareem Alkhaleefa | Full-Stack Developer | MenuItem model & routes, server setup, MongoDB config, client-side app, API service module, auth module |
+| Nabila Jeylani | Back-End Developer | Customer model & routes |
+| Urjii Kalil | Back-End Developer | Order model & routes, popular item endpoint |
 
 ---
 
-## API Endpoints
+## Implemented Functionalities
 
-### Menu Items — `/api/menuItems`
+### API (Server)
+- **User Authentication** — registration and login with bcrypt password hashing, JWT token issuance
+- **Protected Routes** — all order endpoints require a valid JWT via `Authorization: Bearer <token>` header
+- **Menu Items** — full CRUD + filtering by category, availability, and name search + pagination
+- **Customers** — full CRUD + name and email search + pagination
+- **Orders** — full CRUD + filtering by status + popular item analytics endpoint
+- **Error handling** — input validation via Mongoose schemas, meaningful HTTP status codes, try/catch throughout
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/menuItems` | Get all menu items. Supports `?name=`, `?category=`, `?available=`, `?sort=`, `?page=`, `?limit=` |
-| GET | `/api/menuItems/available` | Get only currently available items |
-| GET | `/api/menuItems/:id` | Get a single menu item by ID |
-| POST | `/api/menuItems` | Create a new menu item |
-| PUT | `/api/menuItems/:id` | Full update of a menu item |
-| PATCH | `/api/menuItems/:id` | Partial update of a menu item |
-| DELETE | `/api/menuItems/:id` | Delete a menu item |
-
-### Customers — `/api/customers`
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/customers` | Get all customers. Supports `?name=`, `?sort=`, `?page=`, `?limit=` |
-| GET | `/api/customers/:id` | Get a single customer by ID |
-| POST | `/api/customers` | Create a new customer |
-| PUT | `/api/customers/:id` | Full update of a customer |
-| PATCH | `/api/customers/:id` | Partial update of a customer |
-| DELETE | `/api/customers/:id` | Delete a customer |
-
-### Orders — `/api/orders`
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/orders` | Get all orders |
-| GET | `/api/orders/popular` | Get the most ordered menu item across all orders |
-| GET | `/api/orders/:id` | Get a single order by ID |
-| POST | `/api/orders` | Create a new order |
-| PUT | `/api/orders/:id` | Full update of an order |
-| DELETE | `/api/orders/:id` | Delete an order |
-
-**Total: 19 endpoints**
+### Client (Browser)
+- **Authentication flow** — register, login, logout; JWT stored in `localStorage` via auth module
+- **Dashboard** — welcome view showing user info and live stats (order count, menu items, popular item)
+- **Menu Items page** — search by name, filter by category and availability, create/edit/delete with modal forms
+- **Customers page** — search by name and email (multi-criteria), create/edit/delete with modal forms
+- **Orders page** — filter by status, create orders (select customer + items with auto-calculated total), update status, delete
+- **API service module** — all Fetch API calls centralized in `client/lib/api.ts`
+- **Auth module** — `localStorage` session management in `client/lib/auth.ts`
 
 ---
 
-## Sample Request Bodies
+## Project Structure
 
-### Create a Menu Item
-```json
-{
-  "name": "Margherita Pizza",
-  "description": "Classic tomato sauce with fresh mozzarella and basil",
-  "price": 12.99,
-  "category": "Main Course",
-  "available": true,
-  "ingredients": ["tomato sauce", "mozzarella", "basil"],
-  "calories": 800,
-  "preparationTime": 15
-}
+```
+restaurant-api/
+├── server/                  # Express.js + MongoDB API
+│   ├── config/db.js         # MongoDB connection
+│   ├── middleware/
+│   │   └── authMiddleware.js  # JWT protect middleware
+│   ├── models/
+│   │   ├── user.js          # User schema (bcrypt, role)
+│   │   ├── menuItem.js      # MenuItem schema
+│   │   ├── customer.js      # Customer schema
+│   │   └── order.js         # Order schema (refs Customer + MenuItem)
+│   ├── routes/
+│   │   ├── auth.js          # POST /register, POST /login
+│   │   ├── users.js         # User CRUD
+│   │   ├── menuItems.js     # Menu CRUD + filter/search
+│   │   ├── customers.js     # Customer CRUD + search
+│   │   └── orders.js        # Order CRUD + filter + popular
+│   ├── server.js            # Express app entry point
+│   └── package.json
+├── client/                  # Next.js 15 front-end
+│   ├── lib/
+│   │   ├── api.ts           # Centralized API service module
+│   │   └── auth.ts          # Authentication module (localStorage)
+│   ├── components/
+│   │   └── Navbar.tsx       # Shared navigation bar
+│   └── app/
+│       ├── page.tsx         # Redirect to /dashboard or /login
+│       ├── login/           # Login page
+│       ├── register/        # Registration page
+│       ├── dashboard/       # User dashboard + stats
+│       ├── menu/            # Menu items management
+│       ├── customers/       # Customer management
+│       └── orders/          # Order management
+├── .env.example             # Environment variable template
+└── README.md
 ```
 
-Valid `category` values: `"Appetizer"`, `"Main Course"`, `"Dessert"`, `"Beverage"`, `"Side Dish"`
-
-### Create a Customer
-```json
-{
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "phone": "555-1234",
-  "address": "123 Main St"
-}
-```
-
-### Create an Order
-```json
-{
-  "customer": "<customer_id>",
-  "menuItem": [
-    { "item": "<menuItem_id>", "quantity": 2 }
-  ],
-  "totalAmount": 25.98,
-  "status": "Pending",
-  "specialInstructions": "No onions please"
-}
-```
-
-Valid `status` values: `"Pending"`, `"Preparing"`, `"Ready"`, `"Completed"`, `"Cancelled"`
-
 ---
 
-## Setup & Installation
+## Server Setup
+
+### Prerequisites
+- Node.js 18+
+- A MongoDB Atlas cluster (or local MongoDB)
+
+### Installation
 
 ```bash
 # 1. Clone the repository
 git clone <repo-url>
 cd restaurant-api
 
-# 2. Install dependencies
-npm install
+# 2. Create your .env file from the template
+cp .env.example .env
+# Then fill in MONGO_URI and JWT_SECRET
 
-# 3. Create a .env file in the project root with your MongoDB connection string
-MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/restaurantDB
+# 3. Install server dependencies
+cd server && npm install
 
-# 4. Start the server
-node server.js
+# 4. Start the API server (from the project root)
+node server/server.js
+# Server runs at http://localhost:4000
+
+# 5. In a separate terminal, install and start the client
+cd client && npm install && npm run dev
+# Client runs at http://localhost:3001 (Next.js auto-increments if 3000 is taken)
 ```
 
-Server runs at `http://localhost:3000`.
+### API Endpoints
 
----
-
-## Technical Highlights
-
-- **Mongoose validation**: `required` fields, `minlength`/`maxlength`, `min` value constraints, `enum` for categories and order status, and a **custom validator** on `MenuItem.price` enforcing ≤ 2 decimal places
-- **Virtual properties**: `Customer.displayName` → `"name (email)"`; `MenuItem.formattedPrice` → `"$X.XX"`
-- **ObjectId relationships**: Order → Customer and Order → MenuItem (with `.populate()` on the popular-item endpoint)
-- **`timestamps: true`** on Customer and MenuItem for automatic `createdAt`/`updatedAt`
-- **Pagination** via `?page=&limit=` on Customers and MenuItems
-- **`$regex` text search** on `name` for both Customers and MenuItems
-- **Filtering** by `category` and `available` on MenuItems
-- **Dynamic sorting** via `?sort=<field>` on Customers and MenuItems
-- **Status workflow** on Orders: `Pending → Preparing → Ready → Completed / Cancelled`
-- **async/await** throughout with `try/catch` error handling and appropriate HTTP status codes
-
----
-
-## Team Members & Contributions
-
-| Name | Role | Contributions |
-|---|---|---|
-| Kareem Alkhaleefa | Back-end Developer | MenuItem model & routes, project setup, MongoDB config, server.js |
-| Nabila Jeylani | Back-end Developer | Customer model & routes |
-| Urjii Kalil | Back-end Developer | Order model & routes, popular item endpoint |
-
-### Endpoint Contribution Table
-
-| File | Implemented By |
-|---|---|
-| `models/menuItem.js` | Kareem Alkhaleefa |
-| `routes/menuItems.js` (7 endpoints) | Kareem Alkhaleefa |
-| `config/db.js`, `server.js` | Kareem Alkhaleefa |
-| `models/customer.js` | Nabila Jeylani |
-| `routes/customers.js` (6 endpoints) | Nabila Jeylani |
-| `models/order.js` | Urjii Kalil |
-| `routes/orders.js` (6 endpoints) | Urjii Kalil |
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/register` | — | Create account, returns JWT |
+| POST | `/api/auth/login` | — | Login, returns JWT |
+| GET | `/api/menuItems` | — | List items (`?name=&category=&available=&sort=&page=&limit=`) |
+| POST | `/api/menuItems` | — | Create item |
+| PUT | `/api/menuItems/:id` | — | Update item |
+| DELETE | `/api/menuItems/:id` | — | Delete item |
+| GET | `/api/customers` | — | List customers (`?name=&email=&sort=&page=&limit=`) |
+| POST | `/api/customers` | — | Create customer |
+| PUT | `/api/customers/:id` | — | Update customer |
+| DELETE | `/api/customers/:id` | — | Delete customer |
+| GET | `/api/orders` | JWT | List orders (`?status=&customer=&sort=&page=&limit=`) |
+| GET | `/api/orders/popular` | JWT | Most ordered menu item |
+| POST | `/api/orders` | JWT | Create order |
+| PATCH | `/api/orders/:id` | JWT | Update order status/instructions |
+| DELETE | `/api/orders/:id` | JWT | Delete order |
